@@ -1,0 +1,9 @@
+x = 6;
+
+fun(a,b) => {
+    return a + b;
+};
+
+:print(:fun(x,7));
+
+:print("Hello World");

@@ -1,0 +1,191 @@
+package parser;
+
+import scanner.Scanner;
+import runtime.*;
+import runtime.main.*;
+import runtime.wrapper.*;
+import runtime.loop.*;
+import runtime.function.*;
+import runtime.conditional.*;
+import runtime.arithmetic.*;
+
+import java.util.*;
+
+/* Preliminaries to set up and use the scanner.  */
+parser code {:
+    // Connect this parser to a scanner!
+    Parser(Scanner s){ super(s); }
+:}
+
+/* define how to connect to the scanner! */
+scan with {: return getScanner().next_token(); :};
+
+/* Terminals (tokens returned by the scanner). */
+terminal EQUAL;
+terminal BRACKETS_LEFT, BRACKETS_RIGTH;
+terminal IF, THEN, ELSE;
+terminal COLON;
+terminal CURLY_BRACKETS_LEFT, CURLY_BRACKETS_RIGTH;
+terminal WHILE;
+terminal SEPARATOR;
+terminal ARROW;
+
+terminal TERMINATOR, RETURN, PRINT ,UNDEFINED;
+terminal String ADD_SUB, MULT_DIV;
+terminal String DOUBLE_EQUAL, NOT_EQUAL, GREATER, SMALLER, GREATER_EQUAL, SMALLER_EQUAL;
+terminal String CHARACTERS, IDENTIFIER, NUMBER, BOOLEAN_VALUE;
+
+/* Non terminals */
+non terminal Program                        PROGRAM;
+non terminal InstructionList                BLOCK;
+non terminal Instruction                    STATEMENT;
+non terminal Instruction                    EXPRESSION;
+non terminal AssignInstruction              ASSIGNMENT;
+non terminal StringWrapper                  STRING;
+non terminal BooleanOperator                BOOLEAN_OPERATOR;
+non terminal IfThenElseInstruction          IFTHENELSE;
+non terminal Instruction                    BOOLEAN_CONDITION;
+non terminal FunctionDefinitionInstruction  FUNCTION_DEFINITION;
+non terminal ArgumentList                   ARGUMENT_LIST;
+non terminal FunctionCallInstruction        FUNCTION_CALL;
+non terminal PrintInstruction               PRINT_INSTRUCTION;
+non terminal ParameterList                  PARAMETER_LIST;
+non terminal LoopInstruction                LOOP;
+
+/* Precedences */
+precedence left MULT_DIV, ADD_SUB;
+precedence left NOT_EQUAL, TERMINATOR;
+precedence left DOUBLE_EQUAL, ARROW, EQUAL;
+precedence left THEN, ELSE, BOOLEAN_VALUE;
+precedence left GREATER, SMALLER, GREATER_EQUAL, SMALLER_EQUAL;
+
+/* The grammar rules */
+start with PROGRAM;
+
+// Basics
+
+PROGRAM ::=
+    BLOCK:b
+        {: RESULT = new Program(b); :}
+    ;
+
+BLOCK ::= {: RESULT = new InstructionList(); :} /* empty BLOCK */ 
+    |   BLOCK:b STATEMENT:s TERMINATOR
+        {: b.add(s); RESULT = b; :}        
+    ;
+
+STATEMENT ::=
+    EXPRESSION:e
+        {: RESULT = e; :}
+    | ASSIGNMENT:as
+        {: RESULT = as; :}
+    | LOOP:l
+        {: RESULT = l; :}
+    | FUNCTION_DEFINITION:fd
+        {: RESULT = fd; :}
+    | PRINT_INSTRUCTION:pi
+        {: RESULT = pi; :}
+    | RETURN
+        {: RESULT = new ReturnInstruction(); :}
+    | RETURN EXPRESSION:e
+        {: RESULT = new ReturnInstruction(e); :}
+    ;
+
+EXPRESSION ::=
+    EXPRESSION:e1 ADD_SUB:as EXPRESSION:e2
+        {: RESULT = new ArithmeticInstruction(ArithmeticOperator.getByString(as), e1, e2); :}
+    | BRACKETS_LEFT EXPRESSION:e1 MULT_DIV:md EXPRESSION:e2 BRACKETS_RIGTH
+        {: RESULT = new ArithmeticInstruction(ArithmeticOperator.getByString(md), e1, e2); :}
+    | BRACKETS_LEFT EXPRESSION:e BRACKETS_RIGTH
+        {: RESULT = e; :}
+    | NUMBER:n
+        {: RESULT = new NumberWrapper(Double.parseDouble(n)); :}
+    | IDENTIFIER:v
+        {: RESULT = new GetVariableInstruction(v); :}
+    | IFTHENELSE:t
+        {: RESULT = t; :}
+    | FUNCTION_CALL:fc
+        {: RESULT = fc; :}
+    | STRING:s
+        {: RESULT = s; :}
+    | BOOLEAN_CONDITION:bo
+        {: RESULT = bo; :}
+    | UNDEFINED:uk
+        {: RESULT = new UndefinedWrapper(); :}
+    ;
+
+ASSIGNMENT ::=
+    IDENTIFIER:v EQUAL EXPRESSION:e
+        {: RESULT = new AssignInstruction(v, e); :}
+    ;
+
+STRING ::=
+    CHARACTERS:c {: RESULT = new StringWrapper(c); :}
+    ;
+
+FUNCTION_DEFINITION ::=
+    IDENTIFIER:fn BRACKETS_LEFT BRACKETS_RIGTH ARROW CURLY_BRACKETS_LEFT BLOCK:b CURLY_BRACKETS_RIGTH
+        {: RESULT = new FunctionDefinitionInstruction(fn, b); :}
+    | IDENTIFIER:fn BRACKETS_LEFT PARAMETER_LIST:pl BRACKETS_RIGTH ARROW CURLY_BRACKETS_LEFT BLOCK:b CURLY_BRACKETS_RIGTH
+        {: RESULT = new FunctionDefinitionInstruction(fn, pl, b); :}
+    ;
+
+PARAMETER_LIST ::=
+    IDENTIFIER:v
+        {: RESULT = new ParameterList(v); :}
+    | PARAMETER_LIST:pl SEPARATOR IDENTIFIER:v
+        {: pl.add(v); RESULT = pl; :}
+    ;
+
+FUNCTION_CALL ::=
+    COLON IDENTIFIER:fn BRACKETS_LEFT BRACKETS_RIGTH
+        {: RESULT = new FunctionCallInstruction(fn); :}
+    | COLON IDENTIFIER:fn BRACKETS_LEFT ARGUMENT_LIST:al BRACKETS_RIGTH
+        {: RESULT = new FunctionCallInstruction(fn, al); :}
+    ;
+
+PRINT_INSTRUCTION ::= 
+    COLON PRINT BRACKETS_LEFT ARGUMENT_LIST:al BRACKETS_RIGTH
+        {: RESULT = new PrintInstruction(al); :}
+    ;
+
+ARGUMENT_LIST ::=
+    EXPRESSION:e
+        {: RESULT = new ArgumentList(e); :}
+    | ARGUMENT_LIST:al SEPARATOR EXPRESSION:e
+        {: al.add(e); RESULT = al; :}
+    ;
+
+LOOP ::=
+    WHILE BRACKETS_LEFT BOOLEAN_CONDITION:bo BRACKETS_RIGTH CURLY_BRACKETS_LEFT BLOCK:b CURLY_BRACKETS_RIGTH
+        {: RESULT = new LoopInstruction(bo, b); :}
+    ;
+
+BOOLEAN_OPERATOR ::=
+    DOUBLE_EQUAL
+        {: RESULT = BooleanOperator.EQUAL; :}
+    | NOT_EQUAL
+        {: RESULT = BooleanOperator.NOT_EQUAL; :}
+    | GREATER
+        {: RESULT = BooleanOperator.GREATER; :}
+    | SMALLER
+        {: RESULT = BooleanOperator.SMALLER; :}
+    | GREATER_EQUAL
+        {: RESULT = BooleanOperator.GREATER_EQUAL; :}
+    | SMALLER_EQUAL
+        {: RESULT = BooleanOperator.SMALLER_EQUAL; :}
+    ;
+
+IFTHENELSE ::=
+    IF BRACKETS_LEFT BOOLEAN_CONDITION:bo BRACKETS_RIGTH THEN CURLY_BRACKETS_LEFT BLOCK:b1 CURLY_BRACKETS_RIGTH ELSE CURLY_BRACKETS_LEFT BLOCK:b2 CURLY_BRACKETS_RIGTH
+        {: RESULT = new IfThenElseInstruction(bo, b1, b2); :}
+    ;
+
+BOOLEAN_CONDITION ::=
+    BOOLEAN_VALUE:bv
+        {: RESULT = new BooleanWrapper(Boolean.parseBoolean(bv)); :}
+    | EXPRESSION:e1 BOOLEAN_OPERATOR:cs EXPRESSION:e2
+        {: RESULT = new BooleanInstruction(cs, e1, e2); :}
+    ;
+
+
