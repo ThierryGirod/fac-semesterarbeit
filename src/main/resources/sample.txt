@@ -1,9 +1,65 @@
-x = 6;
+/*
+* Sammlung von Beispielen
+*/
 
-fun(a,b) => {
-    return a + b;
+
+/* Variable */
+
+x = undefined;              /* Undefinierte Variable erzeugen */
+:print("x sollte undefined sein"); 
+:print(x);                  /* :print(x) ist eine spezielle Funktion um Ausgaben zu machen */
+x = 2;                      /* Variable mit Wert überschreiben */
+:print("x sollte 2 sein"); 
+:print(x); 
+x = "Hallo Welt!";          /* Variable kann jeder Zeit überschrieben werden, auch mit anderem Typ Wert */
+:print("x sollte den Wert Hallo Welt enthalten:"); 
+:print(x); 
+boolean_var = 1 < 3;
+:print("boolean_var sollte True sein"); 
+:print(boolean_var);
+
+/* Rechnen */
+
+y = 2;
+z = 3;
+
+resultat = y + z;
+
+:print(resultat);           /* Sollte 5 sein */
+
+:print("Komplexeres Rechenbeispiel");
+res = (100 - (((y + z) * z) * y));
+:print(res);
+
+/* Boolsche Entscheidungen */
+
+condition = 1 == 2;
+
+if(condition == True) then {
+    :print("True Block");
+} else {
+    :print("False Block");
 };
 
-:print(:fun(x,7));
+condition = True;
+if(condition == True) then {
+    :print("True Block");
+} else {
+    :print("False Block");
+};
 
-:print("Hello World");
+/* Funktionsdefinition mit Loop kombiniert */
+
+add(x,y) => {
+    return x + y;
+};
+
+i = 1;
+res = 0;
+
+while (i <= 10) {
+    res = :add(res, i);
+    i = i + 1;
+};
+
+:print(res);
