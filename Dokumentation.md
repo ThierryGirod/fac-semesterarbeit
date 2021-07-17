@@ -16,6 +16,12 @@
 
 Generell werden alle Befehle mit einem Semicolon (;) beendet. Dazu gehören auch If Else Zweige, Schleifen oder Funktionsdefinitionen.
 
+Der Scanner erkennt das Semicolon wie folgt:
+
+```python
+TERMINATOR ::= ;
+```
+
 ### Variablen definieren
 
 Eine Variable definition besteht aus einem Identifikator, einem Zuweisungsoperator und einem Ausdruck, der zugewiesen wird.
@@ -27,6 +33,7 @@ Eine Variable soll dabei aus folgenden Ausdrücken bestehen können:
 - String
 - Andere Variable
 - Logischer Ausdruck
+- Funktionsaufruf
 - Undefiniert (Wenn Variable keinen Wert hat)
 
 In Code übersetzt, sollte also folgendes möglich sein:
@@ -53,6 +60,9 @@ b = 4 < 5;
 b = x == 34;
 b = x != y;
 
+# Funktionsaufruf
+f = :b(2,1);
+
 # Variable deklarieren, aber noch keinen Wert zuweisen
 
 undef = undefined;
@@ -72,8 +82,8 @@ ASSIGNMENT ::= IDENTIFIER EQUAL EXPRESSION;
 Identifikator und Zuweisungsoperator sind Terminale, die wie folgt vom Scanner erkannt werden:
 
 ```python
-identifier ::= [a-zA-z_]+[0-9]*
-equal ::= =
+IDENTIFIER ::= [a-zA-z_]+[0-9]*
+EQUAL ::= =
 ```
 
 Eine Variable darf also mit einer beliebigen Kombination aus Buchstaben, Underscore (\_) und Zahlen erfolgen, solange der Name nicht mit einer Zahl beginnt.
@@ -123,11 +133,11 @@ EXPRESSION ::=
 Nummern, die Klammern und die Operatoren sind Terminale, die wie folgt vom Scanner erkannt werden:
 
 ```python
-number ::= [0-9]+(.[0-9]+)?
-left_bracket ::= \(
-right_bracket ::= \)
-add_sub ::= \+\-]
-mul_div ::= [\*\/]
+NUMBER ::= [0-9]+(.[0-9]+)?
+BRACKETS_LEFT ::= \(
+BRACKETS_RIGHT::= \)
+ADD_SUB ::= \+\-]
+MUL_DIV ::= [\*\/]
 ```
 
 ### Bedingte Anweisungen
@@ -168,13 +178,13 @@ BOOLEAN_CONDITION ::= BOOLEAN_VALUE |
 Die boolschen Werte true und false und die Operatoren sind Terminale, die wie folgt vom Scanner erkannt werden:
 
 ```python
-boolean ::= True | False
-doubleEqual ::= ==
-notEqual ::= \!=
-greater ::= >
-smaller ::= <
-greaterEqual ::= >=
-smallerEqual ::= <=
+BOOLEAN_VALUE ::= True | False
+DOUBLE_EQUAL ::= ==
+NOT_EQUAL ::= \!=
+GREATER ::= >
+SMALLER ::= <
+GREATER_EQUAL_ ::= >=
+SMALLER_EQUAL_ ::= <=
 ```
 
 Um auf Basis dieser logischen Bedingungen Entscheidungen zu treffen, wird ein if-then-else Statement eingebaut, welches wie folgt aufgebaut ist:
@@ -199,11 +209,11 @@ IFTHENELSE ::=
 In Version 1 der Sprache muss zwingend ein Else Block geschrieben werden. Das If, then, else keyword, sowie die geschweiften Klammern sind Terminale, die wie folgt vom Scanner erkennt werden:
 
 ```python
-if ::= if
-then ::= then
-else ::= else
-leftCurlyBracket ::= \{
-rightCurlyBracket ::= \}
+IF ::= if
+THEN ::= then
+ELSE ::= else
+CURLY_BRACKETS_LEFT ::= \{
+CURLY_BRACKETS_RIGTH ::= \}
 ```
 
 ### Schleifen
@@ -212,7 +222,7 @@ Um eine gewisse Automation in die Sprache einzubauen, wurde die While Schleife i
 
 ```python
 while (BOOLEAN_CONDITION) {
- # Ausführbarer Code true block
+ # Ausführbarer Code
 };
 ```
 
@@ -226,5 +236,103 @@ LOOP ::=
 Das While-Keyword ist neben den Klammern auch ein Terminal und wird vom Scanner wie folgt erkannt:
 
 ```python
-while ::= while
+WHILE ::= while
 ```
+
+### Definition von eigenen Funktionen
+
+Eine Funktionsdefinition ist nach folgendem Schema aufgebaut:
+
+```python
+# Funktion ohne Parameter
+a() => {
+    # Ausführbarer Code
+};
+
+# Funktion mit Parametern und Rückgabewert
+a(x,y,z)  => {
+ # Ausführbarer Code
+ return ((x + y) * z);
+};
+```
+
+In Backus-Naur Form:
+
+```python
+FUNCTION_DEFINITION ::=
+    IDENTIFIER BRACKETS_LEFT BRACKETS_RIGTH ARROW CURLY_BRACKETS_LEFT BLOCK CURLY_BRACKETS_RIGTH |
+     IDENTIFIER BRACKETS_LEFT PARAMETER_LIST BRACKETS_RIGTH ARROW CURLY_BRACKETS_LEFT BLOCK CURLY_BRACKETS_RIGTH
+```
+
+Das Return-Keyword und der Pfeil ist neben dem Identifier und Klammern auch ein Terminal und wird vom Scanner wie folgt erkannt:
+
+```python
+ARROW ::= =>
+RETURN ::= return
+```
+
+An dieser Stelle sei erwähnt, dass Funktionen überladen werden können und auch mit dem Return-Keyword einen Rückgabewert senden können. Ein einfaches Return gibt undefined zurück, gleich wie eine Funktion ohne Rückgabewert
+
+### Aufruf von Funktionen
+
+Die eigens definierten Funktionen werden über einen "Caller" aufgerufen, der als Doppelpunkt (:) definiert ist.
+
+```python
+:my_function();
+:funktion_mit_argumenten(2,x,"String", 2 > 3);
+```
+
+Als Argument können hierbei direkt beliebige Ausdrücke übergeben werden.
+
+In Backus-Naur Form:
+
+```python
+FUNCTION_CALL ::=
+    COLON IDENTIFIER BRACKETS_LEFT BRACKETS_RIGTH |
+    COLON IDENTIFIER BRACKETS_LEFT ARGUMENT_LIST BRACKETS_RIGTH
+```
+
+Als spezielle Funktion kann die :print() Funktion angesehen werden. Diese ist eine Build-In Funktion, die es erlaubt, beliebige Ausdrücke auf der Kommandozeile auszugeben.
+
+Eine komplette Liste aller Projektionen folgt weiter unten.
+
+## Scanner
+
+Komplette Liste aller vom Scanner erkennbaren Tokens und deren Patterns.
+
+### Tokens
+
+| Bedeutung                                       | Pattern            |
+| ----------------------------------------------- | ------------------ |
+| Variablenzuweisung                              | `=`                |
+| Variablenname                                   | `[a-zA-z_]+[0-9]*` |
+| Addition                                        | `+`                |
+| Subtraktion                                     | `-`                |
+| Multiplikation                                  | `*`                |
+| Division                                        | `/`                |
+| Linke Klammer                                   | `(`                |
+| Rechte Klammer                                  | `)`                |
+| Zahl                                            | `[0-9]+(.[0-9]+)?` |
+| Gleichheit                                      | `==`               |
+| Ungleichheit                                    | `!=`               |
+| Grösser                                         | `>`                |
+| Kleiner                                         | `<`                |
+| Grösser gleich                                  | `>=`               |
+| Kleiner gleich                                  | `<=`               |
+| If Keyword                                      | `if`               |
+| Then Keyword                                    | `then`             |
+| Else Keyword                                    | `else`             |
+| Bool'sche Werte                                 | `True` und `False` |
+| Start eines neuen Codeblocks                    | `{`                |
+| Ende eines Codeblocks                           | `}`                |
+| Schlaufe                                        | `while`            |
+| Funktionsname                                   | `[a-zA-z_]+[0-9]*` |
+| Trennzeichen zwischen Argumenten und Parametern | `,`                |
+| Funktionsdefinition                             | `=>`               |
+| Funktionscaller                                 | `:`                |
+| Printfunktion Keyword                           | `print`            |
+| String                                          | `"[^\"]*"`         |
+| Instruktionsende                                | `;`                |
+| Rückgabe-Schlüsselwort                          | `return`           |
+| Undefinierter Wert                              | `undefined`        |
+| Kommentar (kann Zeilenumbrüche beinhalten)      | `"/*"~"*/"`        |
