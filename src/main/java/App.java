@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import context.Context;
@@ -17,9 +20,11 @@ public class App {
         
         final String filepath;
         boolean verbose = true; // Visualize scanner and parsetree
+        InputStream input;
 
         if(args.length == 0) {
             filepath  = "sample.txt";
+            input = App.class.getClassLoader().getResourceAsStream(filepath);
         } else {
             if(args.length == 2){
                 filepath  = args[0];
@@ -27,9 +32,9 @@ public class App {
             } else {
                 filepath  = args[0];
             }
+            File file = new File(filepath);
+            input = new FileInputStream(file);
         }
-
-        final var input = App.class.getClassLoader().getResourceAsStream(filepath);
 
         final var reader = new InputStreamReader(input);
 
