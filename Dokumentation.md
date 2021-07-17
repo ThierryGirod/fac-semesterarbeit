@@ -159,8 +159,8 @@ False
 
 # Komplexere Operationen in der zweiten Ebene nur noch mit (==, !=)
 # Klammern, um logische Reihenfolge sicherzustellen
-(True != (6 == 3)) -> False
-(6 < (5 > 4)) -> Fehler, da Zahl < Boolean Ausdruck nicht unterstütz wird
+(True != (6 == 3)) # -> False
+(6 < (5 > 4)) # -> Fehler, da Zahl < Boolean Ausdruck nicht unterstütz wird
 ```
 
 Hier haben wir einen Audruck oder 4 Teile:
@@ -336,3 +336,134 @@ Komplette Liste aller vom Scanner erkennbaren Tokens und deren Patterns.
 | Rückgabe-Schlüsselwort                          | `return`           |
 | Undefinierter Wert                              | `undefined`        |
 | Kommentar (kann Zeilenumbrüche beinhalten)      | `"/*"~"*/"`        |
+
+## Parser
+
+### Terminale
+
+| Terminal             | Zuordnung          |     |
+| -------------------- | ------------------ | --- |
+| EQUAL                | `=`                |
+| BRACKETS_LEFT        | `(`                |
+| BRACKETS_RIGTH       | `)`                |
+| IF                   | `if`               |
+| THEN                 | `then`             |
+| ELSE                 | `else`             |
+| COLON                | `:`                |
+| CURLY_BRACKETS_LEFT  | `{`                |
+| CURLY_BRACKETS_RIGHT | `}`                |
+| WHILE                | `while`            |
+| SEPARATOR            | `,`                |
+| ARROW                | `=>`               |
+| TERMINATOR           | `;`                |
+| RETURN               | `return`           |
+| PRINT                | `print`            |
+| UNDEFINED            | `undefined`        |
+| ADD_SUB              | `+ or -`           |
+| MULT_DIV             | `* or /`           |
+| DOUBLE_EQUAL         | `==`               |
+| NOT_EQUAL            | `!=`               |
+| GREATER              | `>`                |
+| SMALLER              | `<`                |
+| GREATER_EQUAL        | `>=`               |
+| SMALLER_EQUAL        | `<=`               |
+| CHARACTERS           | `"[^\"]*"`         |
+| IDENTIFIER           | `[a-zA-z_]+[0-9]*` |
+| NUMBER               | `[0-9]+(.[0-9]+)?` |
+| BOOL_VALUE           | `True or False`    |
+
+### Nichtterminale
+
+| Nichtterminale      | Bedeutung                 |
+| ------------------- | ------------------------- |
+| PROGRAM             | Programeinstieg           |
+| BLOCK               | Liste von Instruktionen   |
+| STATEMENT           | Einzelne Instruktion      |
+| EXPRESSION          | Ausdrucksdefinition       |
+| ASSIGNMENT          | Variablenzuweisung        |
+| STRING              | String definition         |
+| BOOLEAN_OPERATOR    | Vergleichsoperatoren      |
+| BOOLEAN_CONDITION   | Vergleichsbedingung       |
+| IFTHENELSE          | Wenn-Dann-Sonst Operation |
+| FUNCTION_DEFINITION | Funktionsdefinition       |
+| ARGUMENT_LIST       | Liste von Argumenten      |
+| FUNCTION_CALL       | Funktionsaufruf           |
+| PRINT_INSTRUCTION   | Print Funktionsaufruf     |
+| PARAMETER_LIST      | Liste von Parametern      |
+| LOOP                | Schleife                  |
+
+### Produktionen
+
+```python
+PROGRAM ::=
+    BLOCK
+
+
+BLOCK ::=  /* empty BLOCK */
+    |   BLOCK STATEMENT TERMINATOR
+
+
+STATEMENT ::=
+    EXPRESSION
+    | ASSIGNMENT
+    | LOOP
+    | FUNCTION_DEFINITION
+    | PRINT_INSTRUCTION
+    | RETURN
+    | RETURN EXPRESSION
+
+EXPRESSION ::=
+    EXPRESSION ADD_SUB EXPRESSION
+    | BRACKETS_LEFT EXPRESSION MULT_DIV EXPRESSION BRACKETS_RIGTH
+    | BRACKETS_LEFT EXPRESSION BRACKETS_RIGTH
+    | NUMBER
+    | IDENTIFIER
+    | IFTHENELSE
+    | FUNCTION_CALL
+    | STRING
+    | BOOLEAN_CONDITION
+    | UNDEFINED
+
+ASSIGNMENT ::=
+    IDENTIFIER EQUAL EXPRESSION
+
+STRING ::=
+    CHARACTERS
+
+FUNCTION_DEFINITION ::=
+    IDENTIFIER BRACKETS_LEFT BRACKETS_RIGTH ARROW CURLY_BRACKETS_LEFT BLOCK CURLY_BRACKETS_RIGTH
+    | IDENTIFIER BRACKETS_LEFT PARAMETER_LIST BRACKETS_RIGTH ARROW CURLY_BRACKETS_LEFT BLOCK:b CURLY_BRACKETS_RIGTH
+
+PARAMETER_LIST ::=
+    IDENTIFIER
+    | PARAMETER_LIST SEPARATOR
+
+FUNCTION_CALL ::=
+    COLON IDENTIFIER BRACKETS_LEFT BRACKETS_RIGTH
+    | COLON IDENTIFIER BRACKETS_LEFT ARGUMENT_LIST BRACKETS_RIGTH
+
+PRINT_INSTRUCTION ::=
+    COLON PRINT BRACKETS_LEFT ARGUMENT_LIST BRACKETS_RIGTH
+
+ARGUMENT_LIST ::=
+    EXPRESSION
+    | ARGUMENT_LIST SEPARATOR EXPRESSION
+
+LOOP ::=
+    WHILE BRACKETS_LEFT BOOLEAN_CONDITION BRACKETS_RIGTH CURLY_BRACKETS_LEFT BLOCK CURLY_BRACKETS_RIGTH
+
+BOOLEAN_OPERATOR ::=
+    DOUBLE_EQUAL
+    | NOT_EQUAL
+    | GREATER
+    | SMALLER
+    | GREATER_EQUAL
+    | SMALLER_EQUAL
+
+IFTHENELSE ::=
+    IF BRACKETS_LEFT BOOLEAN_CONDITION BRACKETS_RIGTH THEN CURLY_BRACKETS_LEFT BLOCK CURLY_BRACKETS_RIGTH ELSE CURLY_BRACKETS_LEFT BLOCK CURLY_BRACKETS_RIGTH
+
+BOOLEAN_CONDITION ::=
+    BOOLEAN_VALUE
+    | EXPRESSION BOOLEAN_OPERATOR EXPRESSION
+```
